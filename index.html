@@ -67,21 +67,8 @@
                 Tropical Coffee Tasting ☀️
             </h1>
             <p class="text-amber-800/80 mt-2 text-base md:text-lg">
-                Yaz sıcaklarında kahve çekirdeklerinin karakteristiklerini keşfedin, tadım notlarınızı çıkarın ve Google Sheet tablonuzla senkronize edin!
+                Yaz sıcaklarında kahve çekirdeklerinin karakteristiklerini keşfedin, tadım notlarınızı çıkarın ve Google Sheet tablonuzla anında senkronize edin!
             </p>
-            
-            <!-- Quick Actions -->
-            <div class="mt-6 flex flex-wrap justify-center gap-3">
-                <button onclick="saveAllToLocalStorage()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Tarayıcıya Kaydet
-                </button>
-                <button onclick="openSyncModal()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-5 py-2.5 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
-                    <i class="fa-solid fa-table-list"></i> Google Sheets Bağlantısı
-                </button>
-                <button onclick="exportToCSV()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-5 py-2.5 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
-                    <i class="fa-solid fa-file-csv"></i> CSV Olarak İndir
-                </button>
-            </div>
         </header>
 
         <!-- Kahve Listesi -->
@@ -91,6 +78,31 @@
                 <!-- Dinamik Kartlar -->
             </div>
         </main>
+    </div>
+
+    <!-- Sağ Alt Yüzen Kontrol Paneli (FAB) -->
+    <div class="fixed bottom-6 right-6 z-40 flex flex-col-reverse items-end gap-3 pointer-events-none">
+        <!-- Ana Yuvarlak Menü Butonu -->
+        <button onclick="toggleFloatingMenu()" class="pointer-events-auto bg-gradient-to-r from-orange-400 to-amber-500 hover:from-orange-500 hover:to-amber-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 border-2 border-white/40 focus:outline-none" title="Seçenekler ve Ayarlar">
+            <i id="fab-icon" class="fa-solid fa-cog text-2xl transition-transform duration-300"></i>
+        </button>
+        
+        <!-- Açılır Buton Grubu -->
+        <div id="floating-menu" class="pointer-events-auto flex flex-col gap-2 items-end opacity-0 scale-90 translate-y-4 pointer-events-none transition-all duration-300 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-orange-100/50 max-w-xs">
+            <p class="text-xs font-bold text-amber-900 border-b border-orange-100 pb-1 w-full text-right mb-1">🌴 Kontrol Paneli</p>
+            <button onclick="saveAllToLocalStorage(); toggleFloatingMenu();" class="w-full text-left bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition-all flex items-center justify-between gap-3 whitespace-nowrap">
+                <span>Tarayıcıya Kaydet</span>
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+            </button>
+            <button onclick="openSyncModal(); toggleFloatingMenu();" class="w-full text-left bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition-all flex items-center justify-between gap-3 whitespace-nowrap">
+                <span>Google Sheets Bağlantısı</span>
+                <i class="fa-solid fa-table-list"></i>
+            </button>
+            <button onclick="exportToCSV(); toggleFloatingMenu();" class="w-full text-left bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition-all flex items-center justify-between gap-3 whitespace-nowrap">
+                <span>CSV Olarak İndir</span>
+                <i class="fa-solid fa-file-csv"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Google Sheets Entegrasyon Modalı -->
@@ -164,14 +176,14 @@
                     Bağlantıyı Kaydet
                 </button>
                 <button onclick="syncToGoogleSheets()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-8 py-2.5 rounded-xl transition shadow-lg flex items-center gap-2">
-                    <i class="fa-solid fa-share-from-square"></i> Şimdi Tabloya Yazdır
+                    <i class="fa-solid fa-share-from-square"></i> Şimdi Tümünü Yazdır
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Özel Alert / Toast Kutusu (Asla alert() kullanılmayacak) -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <div id="toast-container" class="fixed bottom-6 left-6 md:right-auto md:left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
         // Kahve Listesi (Verilen listeden temizlenen kahve isimleri ve ekstra metadata)
@@ -352,6 +364,22 @@
             });
         }
 
+        // Yüzen Menüyü Açma / Kapatma Fonksiyonu
+        function toggleFloatingMenu() {
+            const menu = document.getElementById('floating-menu');
+            const icon = document.getElementById('fab-icon');
+            const isOpen = !menu.classList.contains('opacity-0');
+
+            if (isOpen) {
+                menu.classList.add('opacity-0', 'scale-90', 'translate-y-4', 'pointer-events-none');
+                icon.classList.remove('rotate-45');
+            } else {
+                menu.classList.remove('opacity-0', 'scale-90', 'translate-y-4', 'pointer-events-none');
+                icon.classList.remove('pointer-events-none');
+                icon.classList.add('rotate-45');
+            }
+        }
+
         // State güncelleme (anlık)
         function updateValue(id, key, value) {
             coffeeData[id][key] = value;
@@ -359,7 +387,7 @@
             saveToLocalStorageDirectly();
         }
 
-        // Puan Ayarlama
+        // Puan Ayarlama (Anında Google Sheets'e gönderir)
         function setRating(id, rating) {
             playSummerChime(rating);
             coffeeData[id].rating = rating;
@@ -367,10 +395,13 @@
             saveToLocalStorageDirectly();
             renderCoffeeCards();
             showToast(`${coffeeData[id].name.split(' ')[0]} için ${rating} puan verildi! ☀️`, "success");
+            
+            // Puan değiştiğinde otomatik olarak e-tabloya gönder
+            autoSyncToSheets();
         }
 
-        // Tek bir kartı elle kaydetme butonu
-        function saveSingleCard(id) {
+        // Tek bir kartı elle kaydetme butonu (Anında Google Sheets'e gönderir)
+        async function saveSingleCard(id) {
             const charVal = document.getElementById(`char-${id}`).value;
             const tastingVal = document.getElementById(`tasting-${id}`).value;
             
@@ -380,7 +411,46 @@
             
             saveToLocalStorageDirectly();
             renderCoffeeCards();
-            showToast("Not başarıyla kaydedildi! 🌴", "success");
+            showToast("Not yerel tarayıcıya kaydedildi! 🌴", "success");
+
+            // Google Sheets'e anlık arka plan güncellemesi gönder
+            await autoSyncToSheets();
+        }
+
+        // Arka Planda Sessizce Eşitleme Yapma Fonksiyonu (Kullanıcı akışını bozmaz)
+        async function autoSyncToSheets() {
+            const url = localStorage.getItem('google_apps_script_url');
+            if (!url) {
+                // Eğer URL henüz tanımlanmamışsa sadece ufak bir bilgilendirme yap
+                showToast("Notlar tarayıcıda saklanıyor. E-tablo için sağ alttaki çarktan bağlantıyı kurun! 🏖️", "info");
+                return;
+            }
+
+            // Arka planda güncelleme yapılıyor bildirimi
+            showToast("Google Sheet arka planda güncelleniyor... 🔄", "info");
+
+            const payload = Object.keys(coffeeData).map(id => ({
+                name: coffeeData[id].name,
+                characteristic: coffeeData[id].characteristic,
+                tasting: coffeeData[id].tasting,
+                rating: coffeeData[id].rating,
+                updatedAt: coffeeData[id].updatedAt || new Date().toLocaleString('tr-TR')
+            }));
+
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors', // Apps Script CORS engeli için no-cors gereklidir
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                showToast("Google Sheet otomatik olarak başarıyla güncellendi! 🏄‍♂️🎉", "success");
+            } catch (err) {
+                console.error(err);
+                showToast("Google Sheets senkronizasyonu sırasında bir ağ hatası oluştu.", "error");
+            }
         }
 
         // Tümünü yerel hafızaya kaydet
