@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaz Esintili Kahve Günlüğü ☀️🌴</title>
+    <!-- Tailwind CSS ve Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome İkonları -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+        }
+        /* Özel animasyonlar ve dalgalar */
+        .wave {
+            animation: wave 10s linear infinite;
+        }
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-25%); }
+            100% { transform: translateX(0); }
+        }
+        /* Güneş parlaması efekti */
+        .sun-pulse {
+            animation: pulse 3s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6)); }
+            100% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(251, 146, 60, 0.9)); }
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fef3c7;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-tr from-amber-100 via-orange-50 to-sky-100 min-h-screen pb-16 relative overflow-x-hidden">
+
+    <!-- Üst Dekorasyon: Güneş ve Bulutlar -->
+    <div class="absolute top-4 right-4 md:right-12 z-0 opacity-80 pointer-events-none">
+        <div class="sun-pulse text-yellow-400 text-6xl md:text-8xl">
+            <i class="fa-solid fa-sun"></i>
+        </div>
+    </div>
+    <div class="absolute top-12 left-6 md:left-20 z-0 opacity-40 pointer-events-none">
+        <i class="fa-solid fa-cloud text-white text-4xl md:text-6xl"></i>
+    </div>
+
+    <!-- Ana Konteyner -->
+    <div class="container mx-auto px-4 pt-12 relative z-10">
+        
+        <!-- Başlık Kartı -->
+        <header class="text-center mb-12 bg-white/70 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl border border-orange-200/50 max-w-4xl mx-auto transform hover:rotate-1 transition-transform">
+            <div class="inline-block bg-orange-400 text-white px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-3 shadow-md">
+                🌴 Kahve & Yaz Esintisi 🌊
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold text-amber-900 tracking-tight">
+                Tropical Coffee Tasting ☀️
+            </h1>
+            <p class="text-amber-800/80 mt-2 text-base md:text-lg">
+                Yaz sıcaklarında kahve çekirdeklerinin karakteristiklerini keşfedin, tadım notlarınızı çıkarın ve Google Sheet tablonuzla senkronize edin!
+            </p>
+            
+            <!-- Quick Actions -->
+            <div class="mt-6 flex flex-wrap justify-center gap-3">
+                <button onclick="saveAllToLocalStorage()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tarayıcıya Kaydet
+                </button>
+                <button onclick="openSyncModal()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-5 py-2.5 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                    <i class="fa-solid fa-table-list"></i> Google Sheets Bağlantısı
+                </button>
+                <button onclick="exportToCSV()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-5 py-2.5 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                    <i class="fa-solid fa-file-csv"></i> CSV Olarak İndir
+                </button>
+            </div>
+        </header>
+
+        <!-- Kahve Listesi -->
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Kartlar JavaScript ile buraya dinamik olarak render edilecek -->
+            <div id="coffee-cards-container" class="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Dinamik Kartlar -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Google Sheets Entegrasyon Modalı -->
+    <div id="sync-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-amber-50 rounded-3xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border-4 border-amber-300 relative overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-400 via-orange-400 to-sky-400"></div>
+            
+            <button onclick="closeSyncModal()" class="absolute top-4 right-4 text-amber-900/60 hover:text-amber-900 text-2xl transition">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+
+            <h3 class="text-2xl font-bold text-amber-950 flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-table"></i> Google Sheets Senkronizasyon Ayarları
+            </h3>
+
+            <p class="text-amber-900 text-sm mb-4 leading-relaxed">
+                Aşağıdaki adımları takip ederek verilerinizi <strong><a href="https://docs.google.com/spreadsheets/d/13DzqDa5h-KL5Rxv4ccvfrKWNyX-bxyKzV82R2elesJA/edit?usp=sharing" target="_blank" class="text-sky-600 underline font-bold">13DzqDa5...ElesJA</a></strong> ID'li Google E-Tablonuza otomatik olarak aktarabilirsiniz!
+            </p>
+
+            <div class="bg-white/80 p-4 rounded-2xl mb-6 text-xs text-amber-950 font-mono space-y-3 border border-amber-200">
+                <p class="font-bold text-orange-600 text-sm">💡 1 Dakikalık Kurulum Adımları:</p>
+                <ol class="list-decimal list-inside space-y-2">
+                    <li>Google Sheet dosyanızı açın ve üst menüden <strong>Uzantılar &gt; Apps Script</strong> yolunu izleyin.</li>
+                    <li>Açılan kod editöründeki her şeyi silip aşağıdaki kodu yapıştırın:</li>
+                </ol>
+                <textarea readonly class="w-full h-32 p-2 bg-amber-900 text-amber-100 rounded-lg text-xs mt-1" onclick="this.select()">function doPost(e) {
+  try {
+    var sheetId = "13DzqDa5h-KL5Rxv4ccvfrKWNyX-bxyKzV82R2elesJA";
+    var doc = SpreadsheetApp.openById(sheetId);
+    var sheet = doc.getSheets()[0] || doc.insertSheet("Kahve Tadımları");
+    
+    // Sayfayı temizle ve başlıkları yazdır
+    sheet.clearContents();
+    sheet.getRange(1, 1, 1, 5).setValues([["Kahve Adı", "Karakteristik Özellikler", "Tadım Deneyimi", "Puan (1-10)", "Son Güncelleme"]]);
+    sheet.getRange(1, 1, 1, 5).setFontWeight("bold").setBackground("#fef3c7");
+    
+    var data = JSON.parse(e.postData.contents);
+    if (data.length > 0) {
+      var rows = data.map(function(item) {
+        return [item.name, item.characteristic, item.tasting, item.rating, item.updatedAt];
+      });
+      sheet.getRange(2, 1, rows.length, 5).setValues(rows);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({status: "success"}))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+  }
+}</textarea>
+                <ol start="3" class="list-decimal list-inside space-y-2">
+                    <li>Sağ üstteki <strong>Dağıt (Deploy) &gt; Yeni Dağıtım (New deployment)</strong> seçeneğine tıklayın.</li>
+                    <li>Tür olarak <strong>Web Uygulaması (Web App)</strong> seçin.</li>
+                    <li>Erişimi olanlar (Who has access) kısmını <strong>Herkes (Anyone)</strong> yapın ve Dağıt'a basın.</li>
+                    <li>Oluşan <strong>Web App URL</strong>'sini kopyalayıp aşağıdaki kutuya yapıştırın!</li>
+                </ol>
+            </div>
+
+            <!-- Web App URL Girişi -->
+            <div class="mb-6">
+                <label class="block text-amber-900 font-bold mb-2">Google Apps Script Web App URL:</label>
+                <input type="text" id="api-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-4 py-3 rounded-2xl border-2 border-amber-300 focus:outline-none focus:border-orange-400 bg-white shadow-inner">
+            </div>
+
+            <!-- Kaydet ve Gönder Butonları -->
+            <div class="flex justify-between items-center">
+                <button onclick="saveApiUrl()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-xl transition">
+                    Bağlantıyı Kaydet
+                </button>
+                <button onclick="syncToGoogleSheets()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-8 py-2.5 rounded-xl transition shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-share-from-square"></i> Şimdi Tabloya Yazdır
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Özel Alert / Toast Kutusu (Asla alert() kullanılmayacak) -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // Kahve Listesi (Verilen listeden temizlenen kahve isimleri ve ekstra metadata)
+        const initialCoffeeList = [
+            { id: "BCG001", name: "Guatemala Arabica Açık Kavrum (Light Roast)", price: "188,12 TL" },
+            { id: "BCNC001", name: "Nicaragua SHB EP AAA Arabica", price: "198,02 TL" },
+            { id: "BCY01", name: "Etiyopya Yirgacheffe Gr2 Açık Kavrum (Light Roast)", price: "168,32 TL" },
+            { id: "PWSCR01", name: "Panama Santa Clara Arabica", price: "198,02 TL" },
+            { id: "BCYN01", name: "Yirgacheffe Gr1 Natural Açık Kavrum (Light Roast)", price: "198,02 TL" },
+            { id: "BCHM01", name: "Honduras Marcala Organik Kahve", price: "198,02 TL" },
+            { id: "BRBS01", name: "Yellow Bourbon Natural Speciality Arabica Kahve", price: "188,12 TL" },
+            { id: "ISME01", name: "Sumatra Gayo Gr1 Standart Kavrum (Standard Roast)", price: "198,02 TL" },
+            { id: "BCCRT01", name: "Costa Rica Tarrazu", price: "222,77 TL" },
+            { id: "BCT001", name: "Tanzania Arabica AA Washed", price: "178,22 TL" },
+            { id: "BCMV001", name: "Mexico SHG Ep Arabica", price: "178,22 TL" },
+            { id: "BCRSC001", name: "Rwanda/Ruanda Semiwashed", price: "178,22 TL" },
+            { id: "araracap2025", name: "Capadocia Arara Brezilya Speciality Arabica Kahve", price: "Fiyat Belirtilmemiş" }
+        ];
+
+        // Kullanıcı verilerini tutacak state
+        let coffeeData = {};
+
+        // Sayfa yüklendiğinde
+        window.onload = function() {
+            loadSavedData();
+            renderCoffeeCards();
+            
+            // Apps Script URL'sini yerelden çek
+            const savedUrl = localStorage.getItem('google_apps_script_url');
+            if (savedUrl) {
+                document.getElementById('api-url-input').value = savedUrl;
+            }
+        };
+
+        // Veriyi LocalStorage'dan çek veya ilk kez oluştur
+        function loadSavedData() {
+            const stored = localStorage.getItem('coffee_tasting_notes');
+            if (stored) {
+                coffeeData = JSON.parse(stored);
+            } else {
+                // Boş yapıyı doldur
+                initialCoffeeList.forEach(coffee => {
+                    coffeeData[coffee.id] = {
+                        name: coffee.name,
+                        price: coffee.price,
+                        characteristic: "",
+                        tasting: "",
+                        rating: 0,
+                        updatedAt: ""
+                    };
+                });
+                saveToLocalStorageDirectly();
+            }
+        }
+
+        // Yerel kaydetme yardımcı fonksiyonu
+        function saveToLocalStorageDirectly() {
+            localStorage.setItem('coffee_tasting_notes', JSON.stringify(coffeeData));
+        }
+
+        // Web Audio API ile Neşeli Marimba Ses Efekti (Tropikal hissi desteklemek için)
+        function playSummerChime(rating) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                // Puan arttıkça frekans yükselsin (daha eğlenceli!)
+                const frequency = 220 + (rating * 55); 
+                osc.type = 'sine'; // Yumuşak marimba tınısı
+                osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                
+                // Ses sönümleme efekti
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            } catch (e) {
+                console.log("AudioContext engellendi veya desteklenmiyor.");
+            }
+        }
+
+        // Kahve Kartlarını HTML'e Basma
+        function renderCoffeeCards() {
+            const container = document.getElementById('coffee-cards-container');
+            container.innerHTML = "";
+
+            initialCoffeeList.forEach(coffee => {
+                const data = coffeeData[coffee.id];
+                const rating = data.rating || 0;
+
+                // Güneş İkonu Puan Tasarımı
+                let ratingHtml = "";
+                for (let i = 1; i <= 10; i++) {
+                    const activeClass = i <= rating ? 'text-amber-500 scale-125' : 'text-amber-200 hover:text-amber-400';
+                    ratingHtml += `
+                        <button type="button" onclick="setRating('${coffee.id}', ${i})" class="transition-all transform duration-150 p-1 focus:outline-none ${activeClass}">
+                            <i class="fa-solid fa-sun text-lg md:text-xl"></i>
+                        </button>
+                    `;
+                }
+
+                // Kart Şablonu (Summer Gradient ve Kumsal Görünümü)
+                const cardHtml = `
+                    <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-orange-100 hover:shadow-xl transition-all transform hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
+                        <!-- Plaj Şemsiyesi Süsü -->
+                        <div class="absolute -top-3 -right-3 text-orange-200/30 text-5xl pointer-events-none">
+                            <i class="fa-solid fa-umbrella-beach"></i>
+                        </div>
+
+                        <div>
+                            <!-- Üst Başlık ve Fiyat -->
+                            <div class="flex justify-between items-start gap-2 mb-3">
+                                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-lg">
+                                    Code: ${coffee.id}
+                                </span>
+                                <span class="text-orange-600 font-bold text-sm">
+                                    ${coffee.price}
+                                </span>
+                            </div>
+
+                            <h4 class="text-lg font-bold text-amber-950 mb-4 tracking-tight min-h-[56px] flex items-center">
+                                ${coffee.name}
+                            </h4>
+
+                            <!-- Puanlama Alanı -->
+                            <div class="mb-4 bg-orange-50/50 p-2.5 rounded-2xl border border-orange-100/50">
+                                <div class="flex justify-between items-center mb-1 text-xs text-amber-900 font-bold">
+                                    <span>Tadım Puanı:</span>
+                                    <span class="text-orange-600">${rating}/10 Güneş</span>
+                                </div>
+                                <div class="flex justify-between items-center gap-0.5">
+                                    ${ratingHtml}
+                                </div>
+                            </div>
+
+                            <!-- Karakteristik Girdisi -->
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-amber-900 mb-1.5 flex items-center gap-1">
+                                    <i class="fa-solid fa-seedling text-amber-600"></i> Karakteristik Özellikler
+                                </label>
+                                <input type="text" 
+                                    id="char-${coffee.id}" 
+                                    value="${escapeHtml(data.characteristic)}" 
+                                    onchange="updateValue('${coffee.id}', 'characteristic', this.value)"
+                                    placeholder="Narenciye, fındıksı, asiditesi yüksek vb..." 
+                                    class="w-full px-3 py-2 text-sm rounded-xl border border-amber-200 focus:outline-none focus:border-orange-400 bg-white/90">
+                            </div>
+
+                            <!-- Kendi Tadım Notum -->
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-amber-900 mb-1.5 flex items-center gap-1">
+                                    <i class="fa-solid fa-mug-hot text-amber-700"></i> Kendi Tadım Deneyimim
+                                </label>
+                                <textarea 
+                                    id="tasting-${coffee.id}" 
+                                    onchange="updateValue('${coffee.id}', 'tasting', this.value)"
+                                    placeholder="Örn: Sabah serinliğinde V60 ile demledim, gövdesi çok dengeliydi..." 
+                                    class="w-full px-3 py-2 text-sm rounded-xl border border-amber-200 focus:outline-none focus:border-orange-400 bg-white/90 h-20 resize-none">${escapeHtml(data.tasting)}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Kaydetme Durumu / Son Güncelleme -->
+                        <div class="mt-2 pt-3 border-t border-amber-100 flex justify-between items-center">
+                            <span class="text-[10px] text-amber-700/60" id="time-${coffee.id}">
+                                ${data.updatedAt ? 'Son kayıt: ' + data.updatedAt : 'Henüz not girilmedi'}
+                            </span>
+                            <button onclick="saveSingleCard('${coffee.id}')" class="bg-orange-400 hover:bg-orange-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg transition transform active:scale-95 flex items-center gap-1 shadow">
+                                <i class="fa-solid fa-floppy-disk"></i> Kaydet
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+
+        // State güncelleme (anlık)
+        function updateValue(id, key, value) {
+            coffeeData[id][key] = value;
+            coffeeData[id].updatedAt = new Date().toLocaleString('tr-TR');
+            saveToLocalStorageDirectly();
+        }
+
+        // Puan Ayarlama
+        function setRating(id, rating) {
+            playSummerChime(rating);
+            coffeeData[id].rating = rating;
+            coffeeData[id].updatedAt = new Date().toLocaleString('tr-TR');
+            saveToLocalStorageDirectly();
+            renderCoffeeCards();
+            showToast(`${coffeeData[id].name.split(' ')[0]} için ${rating} puan verildi! ☀️`, "success");
+        }
+
+        // Tek bir kartı elle kaydetme butonu
+        function saveSingleCard(id) {
+            const charVal = document.getElementById(`char-${id}`).value;
+            const tastingVal = document.getElementById(`tasting-${id}`).value;
+            
+            coffeeData[id].characteristic = charVal;
+            coffeeData[id].tasting = tastingVal;
+            coffeeData[id].updatedAt = new Date().toLocaleString('tr-TR');
+            
+            saveToLocalStorageDirectly();
+            renderCoffeeCards();
+            showToast("Not başarıyla kaydedildi! 🌴", "success");
+        }
+
+        // Tümünü yerel hafızaya kaydet
+        function saveAllToLocalStorage() {
+            // Değerleri DOM'dan çekip eşitle
+            initialCoffeeList.forEach(coffee => {
+                const charEl = document.getElementById(`char-${coffee.id}`);
+                const tastingEl = document.getElementById(`tasting-${coffee.id}`);
+                if (charEl && tastingEl) {
+                    coffeeData[coffee.id].characteristic = charEl.value;
+                    coffeeData[coffee.id].tasting = tastingEl.value;
+                }
+            });
+            saveToLocalStorageDirectly();
+            renderCoffeeCards();
+            showToast("Tüm kahve notları tarayıcıya güvenle kaydedildi! 🐚", "success");
+        }
+
+        // CSV Olarak İndirme Yeteneği
+        function exportToCSV() {
+            saveAllToLocalStorage();
+            
+            let csvContent = "\uFEFF"; // UTF-8 BOM Excel'in Türkçe karakterleri düzgün açması için
+            csvContent += "Kahve Kodu,Kahve Adı,Karakteristik Özellikler,Tadım Deneyimi,Puan (1-10),Son Güncelleme\n";
+
+            Object.keys(coffeeData).forEach(id => {
+                const item = coffeeData[id];
+                const row = [
+                    id,
+                    `"${item.name.replace(/"/g, '""')}"`,
+                    `"${item.characteristic.replace(/"/g, '""')}"`,
+                    `"${item.tasting.replace(/"/g, '""')}"`,
+                    item.rating,
+                    `"${item.updatedAt}"`
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "kahve_tadim_gunlugu_yaz.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("CSV dosyanız başarıyla indirildi! 🍹", "success");
+        }
+
+        // Modal Yönetimi
+        function openSyncModal() {
+            document.getElementById('sync-modal').classList.remove('hidden');
+        }
+        function closeSyncModal() {
+            document.getElementById('sync-modal').classList.add('hidden');
+        }
+
+        // Apps Script URL kaydetme
+        function saveApiUrl() {
+            const url = document.getElementById('api-url-input').value.trim();
+            if (url) {
+                localStorage.setItem('google_apps_script_url', url);
+                showToast("Web App URL başarıyla kaydedildi! 🏖️", "success");
+            } else {
+                showToast("Lütfen geçerli bir URL girin.", "error");
+            }
+        }
+
+        // Google Sheets'e POST Gönderme İşlemi
+        async function syncToGoogleSheets() {
+            saveAllToLocalStorage();
+            const url = localStorage.getItem('google_apps_script_url');
+            
+            if (!url) {
+                showToast("Lütfen önce Google Apps Script Web App URL'nizi girip kaydedin!", "error");
+                return;
+            }
+
+            showToast("Veriler Google Sheets'e gönderiliyor... Lütfen bekleyin. 🔄", "info");
+
+            // Gönderilecek veriyi yapılandır
+            const payload = Object.keys(coffeeData).map(id => ({
+                name: coffeeData[id].name,
+                characteristic: coffeeData[id].characteristic,
+                tasting: coffeeData[id].tasting,
+                rating: coffeeData[id].rating,
+                updatedAt: coffeeData[id].updatedAt || new Date().toLocaleString('tr-TR')
+            }));
+
+            // Exponential backoff içeren fetch metodu
+            const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+                try {
+                    return await fetch(url, options);
+                } catch (err) {
+                    if (retries <= 1) throw err;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithRetry(url, options, retries - 1, delay * 2);
+                }
+            };
+
+            try {
+                const response = await fetchWithRetry(url, {
+                    method: 'POST',
+                    mode: 'no-cors', // Apps Script için no-cors kullanılması gerekebilir
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                // Not: no-cors modunda yanıt tipi 'opaque' olur, bu nedenle status okunamayabilir ancak gönderim gerçekleşir.
+                showToast("Google Sheet başarıyla güncellendi! Tablonuzu kontrol edebilirsiniz. 🏄‍♂️🎉", "success");
+                closeSyncModal();
+            } catch (err) {
+                console.error(err);
+                showToast("Bir bağlantı hatası oluştu. Lütfen URL'yi ve internetinizi kontrol edin.", "error");
+            }
+        }
+
+        // Yardımcı HTML Escape Fonksiyonu
+        function escapeHtml(text) {
+            if (!text) return "";
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Toast Bildirim Sistemi (alert yerine konforlu arayüz mesajı)
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bg = "bg-amber-500";
+            let icon = '<i class="fa-solid fa-circle-check"></i>';
+            if (type === "error") {
+                bg = "bg-red-500";
+                icon = '<i class="fa-solid fa-circle-exclamation"></i>';
+            } else if (type === "info") {
+                bg = "bg-sky-500";
+                icon = '<i class="fa-solid fa-circle-info"></i>';
+            }
+
+            toast.className = `${bg} text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm text-sm font-semibold`;
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            // Animate In
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            // Animate Out & Remove
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
