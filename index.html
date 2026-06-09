@@ -73,7 +73,6 @@
 
         <!-- Kahve Listesi -->
         <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Kartlar JavaScript ile buraya dinamik olarak render edilecek -->
             <div id="coffee-cards-container" class="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Dinamik Kartlar -->
             </div>
@@ -105,7 +104,7 @@
         </div>
     </div>
 
-    <!-- Google Sheets Entegrasyon Modalı -->
+    <!-- Google Sheets Entegrasyon Modaları -->
     <div id="sync-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-amber-50 rounded-3xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border-4 border-amber-300 relative overflow-hidden max-h-[90vh] overflow-y-auto">
             <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-400 via-orange-400 to-sky-400"></div>
@@ -115,26 +114,56 @@
             </button>
 
             <h3 class="text-2xl font-bold text-amber-950 flex items-center gap-2 mb-4">
-                <i class="fa-solid fa-table"></i> Google Sheets Senkronizasyon Ayarları
+                <i class="fa-solid fa-table"></i> Google Sheets Çift Yönlü Entegrasyon
             </h3>
 
             <p class="text-amber-900 text-sm mb-4 leading-relaxed">
-                Aşağıdaki adımları takip ederek verilerinizi <strong><a href="https://docs.google.com/spreadsheets/d/13DzqDa5h-KL5Rxv4ccvfrKWNyX-bxyKzV82R2elesJA/edit?usp=sharing" target="_blank" class="text-sky-600 underline font-bold">13DzqDa5...ElesJA</a></strong> ID'li Google E-Tablonuza otomatik olarak aktarabilirsiniz!
+                Bu kurulumla hem verilerinizi <strong><a href="https://docs.google.com/spreadsheets/d/13DzqDa5h-KL5Rxv4ccvfrKWNyX-bxyKzV82R2elesJA/edit?usp=sharing" target="_blank" class="text-sky-600 underline font-bold">13DzqDa5...ElesJA</a></strong> ID'li e-tablonuza otomatik kaydeder hem de sayfa ilk açıldığında oradaki mevcut verileri geri yükler!
             </p>
 
             <div class="bg-white/80 p-4 rounded-2xl mb-6 text-xs text-amber-950 font-mono space-y-3 border border-amber-200">
-                <p class="font-bold text-orange-600 text-sm">💡 1 Dakikalık Kurulum Adımları:</p>
+                <p class="font-bold text-orange-600 text-sm">💡 Google Apps Script Güncelleme Adımları:</p>
                 <ol class="list-decimal list-inside space-y-2">
-                    <li>Google Sheet dosyanızı açın ve üst menüden <strong>Uzantılar &gt; Apps Script</strong> yolunu izleyin.</li>
-                    <li>Açılan kod editöründeki her şeyi silip aşağıdaki kodu yapıştırın:</li>
+                    <li>Google Sheet dosyanızda üst menüden <strong>Uzantılar &gt; Apps Script</strong> yolunu izleyin.</li>
+                    <li>Aşağıdaki kodun tamamını kopyalayıp oradaki mevcut kodların yerine yapıştırın (Eski kodu tamamen silin):</li>
                 </ol>
-                <textarea readonly class="w-full h-32 p-2 bg-amber-900 text-amber-100 rounded-lg text-xs mt-1" onclick="this.select()">function doPost(e) {
+                <textarea readonly class="w-full h-40 p-2 bg-amber-900 text-amber-100 rounded-lg text-xs mt-1" onclick="this.select()">function doGet() {
+  try {
+    var sheetId = "13DzqDa5h-KL5Rxv4ccvfrKWNyX-bxyKzV82R2elesJA";
+    var doc = SpreadsheetApp.openById(sheetId);
+    var sheet = doc.getSheets()[0] || doc.insertSheet("Kahve Tadımları");
+    var lastRow = sheet.getLastRow();
+    
+    var data = [];
+    if (lastRow > 1) {
+      var rows = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+      for (var i = 0; i < rows.length; i++) {
+        data.push({
+          name: rows[i][0],
+          characteristic: rows[i][1],
+          tasting: rows[i][2],
+          rating: Number(rows[i][3]) || 0,
+          updatedAt: rows[i][4]
+        });
+      }
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({status: "success", data: data}))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+  }
+}
+
+function doPost(e) {
   try {
     var sheetId = "13DzqDa5h-KL5Rxv4ccvfrKWNyX-bxyKzV82R2elesJA";
     var doc = SpreadsheetApp.openById(sheetId);
     var sheet = doc.getSheets()[0] || doc.insertSheet("Kahve Tadımları");
     
-    // Sayfayı temizle ve başlıkları yazdır
     sheet.clearContents();
     sheet.getRange(1, 1, 1, 5).setValues([["Kahve Adı", "Karakteristik Özellikler", "Tadım Deneyimi", "Puan (1-10)", "Son Güncelleme"]]);
     sheet.getRange(1, 1, 1, 5).setFontWeight("bold").setBackground("#fef3c7");
@@ -157,10 +186,10 @@
   }
 }</textarea>
                 <ol start="3" class="list-decimal list-inside space-y-2">
-                    <li>Sağ üstteki <strong>Dağıt (Deploy) &gt; Yeni Dağıtım (New deployment)</strong> seçeneğine tıklayın.</li>
-                    <li>Tür olarak <strong>Web Uygulaması (Web App)</strong> seçin.</li>
-                    <li>Erişimi olanlar (Who has access) kısmını <strong>Herkes (Anyone)</strong> yapın ve Dağıt'a basın.</li>
-                    <li>Oluşan <strong>Web App URL</strong>'sini kopyalayıp aşağıdaki kutuya yapıştırın!</li>
+                    <li>Apps Script sayfasında üstteki **Kaydet** butonuna basın.</li>
+                    <li>Sağ üstteki **Dağıt (Deploy) &gt; Yeni Dağıtım (New deployment)** seçeneğine tıklayın.</li>
+                    <li>Türün **Web Uygulaması (Web App)**, erişimi olanın **Herkes (Anyone)** olduğundan emin olun ve **Dağıt** deyin. *(Önemli: Eğer yeni sürüm oluşturuyorsanız "Yeni Dağıtım" oluşturmanız her zaman en güvenli yoldur.)*</li>
+                    <li>Oluşan **Web App URL**'sini kopyalayıp aşağıdaki kutuya yapıştırın!</li>
                 </ol>
             </div>
 
@@ -173,7 +202,7 @@
             <!-- Kaydet ve Gönder Butonları -->
             <div class="flex justify-between items-center">
                 <button onclick="saveApiUrl()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-2.5 rounded-xl transition">
-                    Bağlantıyı Kaydet
+                    Bağlantıyı Kaydet & Çek
                 </button>
                 <button onclick="syncToGoogleSheets()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-8 py-2.5 rounded-xl transition shadow-lg flex items-center gap-2">
                     <i class="fa-solid fa-share-from-square"></i> Şimdi Tümünü Yazdır
@@ -182,11 +211,11 @@
         </div>
     </div>
 
-    <!-- Özel Alert / Toast Kutusu (Asla alert() kullanılmayacak) -->
+    <!-- Özel Toast Kutusu -->
     <div id="toast-container" class="fixed bottom-6 left-6 md:right-auto md:left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
-        // Kahve Listesi (Verilen listeden temizlenen kahve isimleri ve ekstra metadata)
+        // Kahve Listesi
         const initialCoffeeList = [
             { id: "BCG001", name: "Guatemala Arabica Açık Kavrum (Light Roast)", price: "188,12 TL" },
             { id: "BCNC001", name: "Nicaragua SHB EP AAA Arabica", price: "198,02 TL" },
@@ -203,18 +232,21 @@
             { id: "araracap2025", name: "Capadocia Arara Brezilya Speciality Arabica Kahve", price: "Fiyat Belirtilmemiş" }
         ];
 
-        // Kullanıcı verilerini tutacak state
         let coffeeData = {};
 
-        // Sayfa yüklendiğinde
-        window.onload = function() {
+        // Sayfa yüklendiğinde çalışacak ana akış
+        window.onload = async function() {
             loadSavedData();
             renderCoffeeCards();
             
-            // Apps Script URL'sini yerelden çek
+            // Web App URL'sini yerelden çek
             const savedUrl = localStorage.getItem('google_apps_script_url');
             if (savedUrl) {
                 document.getElementById('api-url-input').value = savedUrl;
+                // URL varsa verileri Google Sheets'ten otomatik olarak çek
+                await fetchDataFromGoogleSheets();
+            } else {
+                showToast("E-Tablo bağlantısı henüz kurulmadı. Verileriniz yerel hafızada saklanıyor. 🏖️", "info");
             }
         };
 
@@ -224,7 +256,6 @@
             if (stored) {
                 coffeeData = JSON.parse(stored);
             } else {
-                // Boş yapıyı doldur
                 initialCoffeeList.forEach(coffee => {
                     coffeeData[coffee.id] = {
                         name: coffee.name,
@@ -239,24 +270,59 @@
             }
         }
 
-        // Yerel kaydetme yardımcı fonksiyonu
         function saveToLocalStorageDirectly() {
             localStorage.setItem('coffee_tasting_notes', JSON.stringify(coffeeData));
         }
 
-        // Web Audio API ile Neşeli Marimba Ses Efekti (Tropikal hissi desteklemek için)
+        // Google Sheets'ten Veri Çekme (GET) Fonksiyonu
+        async function fetchDataFromGoogleSheets() {
+            const url = localStorage.getItem('google_apps_script_url');
+            if (!url) return;
+
+            showToast("Google Sheets'teki mevcut verileriniz indiriliyor... 🔄", "info");
+
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.status === "success" && result.data && result.data.length > 0) {
+                    // Gelen verileri mevcut listeyle eşleştirip güncelle
+                    result.data.forEach(sheetItem => {
+                        const matchingCoffee = initialCoffeeList.find(c => c.name === sheetItem.name);
+                        if (matchingCoffee) {
+                            coffeeData[matchingCoffee.id] = {
+                                name: sheetItem.name,
+                                price: matchingCoffee.price,
+                                characteristic: sheetItem.characteristic || "",
+                                tasting: sheetItem.tasting || "",
+                                rating: sheetItem.rating || 0,
+                                updatedAt: sheetItem.updatedAt || new Date().toLocaleString('tr-TR')
+                            };
+                        }
+                    });
+                    saveToLocalStorageDirectly();
+                    renderCoffeeCards();
+                    showToast("Google Sheets verileri başarıyla geri yüklendi! 🏄‍♂️🎉", "success");
+                } else if (result.status === "success") {
+                    showToast("Google Sheet tablonuz henüz boş. Giriş yaptıkça dolacaktır! 🐚", "info");
+                }
+            } catch (err) {
+                console.error("Veri çekme hatası:", err);
+                showToast("Google Sheets verileri okunamadı. Çevrimdışı/Yerel kayıtlar yükleniyor.", "info");
+            }
+        }
+
+        // Eğlenceli Marimba Sesi
         function playSummerChime(rating) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 
-                // Puan arttıkça frekans yükselsin (daha eğlenceli!)
                 const frequency = 220 + (rating * 55); 
-                osc.type = 'sine'; // Yumuşak marimba tınısı
+                osc.type = 'sine';
                 osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
                 
-                // Ses sönümleme efekti
                 gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
                 
@@ -265,11 +331,11 @@
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.4);
             } catch (e) {
-                console.log("AudioContext engellendi veya desteklenmiyor.");
+                console.log("AudioContext engellendi.");
             }
         }
 
-        // Kahve Kartlarını HTML'e Basma
+        // Kartları Arayüze Ekleme
         function renderCoffeeCards() {
             const container = document.getElementById('coffee-cards-container');
             container.innerHTML = "";
@@ -278,7 +344,6 @@
                 const data = coffeeData[coffee.id];
                 const rating = data.rating || 0;
 
-                // Güneş İkonu Puan Tasarımı
                 let ratingHtml = "";
                 for (let i = 1; i <= 10; i++) {
                     const activeClass = i <= rating ? 'text-amber-500 scale-125' : 'text-amber-200 hover:text-amber-400';
@@ -289,16 +354,13 @@
                     `;
                 }
 
-                // Kart Şablonu (Summer Gradient ve Kumsal Görünümü)
                 const cardHtml = `
                     <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-orange-100 hover:shadow-xl transition-all transform hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between">
-                        <!-- Plaj Şemsiyesi Süsü -->
                         <div class="absolute -top-3 -right-3 text-orange-200/30 text-5xl pointer-events-none">
                             <i class="fa-solid fa-umbrella-beach"></i>
                         </div>
 
                         <div>
-                            <!-- Üst Başlık ve Fiyat -->
                             <div class="flex justify-between items-start gap-2 mb-3">
                                 <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-lg">
                                     Code: ${coffee.id}
@@ -312,7 +374,6 @@
                                 ${coffee.name}
                             </h4>
 
-                            <!-- Puanlama Alanı -->
                             <div class="mb-4 bg-orange-50/50 p-2.5 rounded-2xl border border-orange-100/50">
                                 <div class="flex justify-between items-center mb-1 text-xs text-amber-900 font-bold">
                                     <span>Tadım Puanı:</span>
@@ -323,7 +384,6 @@
                                 </div>
                             </div>
 
-                            <!-- Karakteristik Girdisi -->
                             <div class="mb-4">
                                 <label class="block text-xs font-bold text-amber-900 mb-1.5 flex items-center gap-1">
                                     <i class="fa-solid fa-seedling text-amber-600"></i> Karakteristik Özellikler
@@ -336,7 +396,6 @@
                                     class="w-full px-3 py-2 text-sm rounded-xl border border-amber-200 focus:outline-none focus:border-orange-400 bg-white/90">
                             </div>
 
-                            <!-- Kendi Tadım Notum -->
                             <div class="mb-4">
                                 <label class="block text-xs font-bold text-amber-900 mb-1.5 flex items-center gap-1">
                                     <i class="fa-solid fa-mug-hot text-amber-700"></i> Kendi Tadım Deneyimim
@@ -349,7 +408,6 @@
                             </div>
                         </div>
 
-                        <!-- Kaydetme Durumu / Son Güncelleme -->
                         <div class="mt-2 pt-3 border-t border-amber-100 flex justify-between items-center">
                             <span class="text-[10px] text-amber-700/60" id="time-${coffee.id}">
                                 ${data.updatedAt ? 'Son kayıt: ' + data.updatedAt : 'Henüz not girilmedi'}
@@ -364,7 +422,7 @@
             });
         }
 
-        // Yüzen Menüyü Açma / Kapatma Fonksiyonu
+        // Yüzen Menüyü Açma/Kapatma
         function toggleFloatingMenu() {
             const menu = document.getElementById('floating-menu');
             const icon = document.getElementById('fab-icon');
@@ -380,14 +438,14 @@
             }
         }
 
-        // State güncelleme (anlık)
+        // Değer Değişikliği (Anlık state'e yazma)
         function updateValue(id, key, value) {
             coffeeData[id][key] = value;
             coffeeData[id].updatedAt = new Date().toLocaleString('tr-TR');
             saveToLocalStorageDirectly();
         }
 
-        // Puan Ayarlama (Anında Google Sheets'e gönderir)
+        // Puan Verme ve Otomatik Kaydetme
         function setRating(id, rating) {
             playSummerChime(rating);
             coffeeData[id].rating = rating;
@@ -396,11 +454,10 @@
             renderCoffeeCards();
             showToast(`${coffeeData[id].name.split(' ')[0]} için ${rating} puan verildi! ☀️`, "success");
             
-            // Puan değiştiğinde otomatik olarak e-tabloya gönder
             autoSyncToSheets();
         }
 
-        // Tek bir kartı elle kaydetme butonu (Anında Google Sheets'e gönderir)
+        // Karttaki Kaydet Butonu ve Otomatik Kaydetme
         async function saveSingleCard(id) {
             const charVal = document.getElementById(`char-${id}`).value;
             const tastingVal = document.getElementById(`tasting-${id}`).value;
@@ -413,21 +470,16 @@
             renderCoffeeCards();
             showToast("Not yerel tarayıcıya kaydedildi! 🌴", "success");
 
-            // Google Sheets'e anlık arka plan güncellemesi gönder
             await autoSyncToSheets();
         }
 
-        // Arka Planda Sessizce Eşitleme Yapma Fonksiyonu (Kullanıcı akışını bozmaz)
+        // Arka Planda Sessizce Gönderme (Kullanıcıyı duraklatmaz)
         async function autoSyncToSheets() {
             const url = localStorage.getItem('google_apps_script_url');
             if (!url) {
-                // Eğer URL henüz tanımlanmamışsa sadece ufak bir bilgilendirme yap
-                showToast("Notlar tarayıcıda saklanıyor. E-tablo için sağ alttaki çarktan bağlantıyı kurun! 🏖️", "info");
+                showToast("Notlar yerelde saklandı. Veritabanı senkronizasyonu için sağ alttaki çarktan URL'nizi girin! 🏖️", "info");
                 return;
             }
-
-            // Arka planda güncelleme yapılıyor bildirimi
-            showToast("Google Sheet arka planda güncelleniyor... 🔄", "info");
 
             const payload = Object.keys(coffeeData).map(id => ({
                 name: coffeeData[id].name,
@@ -440,22 +492,20 @@
             try {
                 await fetch(url, {
                     method: 'POST',
-                    mode: 'no-cors', // Apps Script CORS engeli için no-cors gereklidir
+                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
                 });
-                showToast("Google Sheet otomatik olarak başarıyla güncellendi! 🏄‍♂️🎉", "success");
+                showToast("E-Tablo arka planda başarıyla güncellendi! 🏄‍♂️🎉", "success");
             } catch (err) {
                 console.error(err);
-                showToast("Google Sheets senkronizasyonu sırasında bir ağ hatası oluştu.", "error");
+                showToast("Senkronizasyon sırasında ufak bir bağlantı hatası oluştu.", "error");
             }
         }
 
-        // Tümünü yerel hafızaya kaydet
         function saveAllToLocalStorage() {
-            // Değerleri DOM'dan çekip eşitle
             initialCoffeeList.forEach(coffee => {
                 const charEl = document.getElementById(`char-${coffee.id}`);
                 const tastingEl = document.getElementById(`tasting-${coffee.id}`);
@@ -466,14 +516,14 @@
             });
             saveToLocalStorageDirectly();
             renderCoffeeCards();
-            showToast("Tüm kahve notları tarayıcıya güvenle kaydedildi! 🐚", "success");
+            showToast("Tüm notlar tarayıcı hafızasına güvenle kaydedildi! 🐚", "success");
         }
 
-        // CSV Olarak İndirme Yeteneği
+        // CSV İndirme
         function exportToCSV() {
             saveAllToLocalStorage();
             
-            let csvContent = "\uFEFF"; // UTF-8 BOM Excel'in Türkçe karakterleri düzgün açması için
+            let csvContent = "\uFEFF"; 
             csvContent += "Kahve Kodu,Kahve Adı,Karakteristik Özellikler,Tadım Deneyimi,Puan (1-10),Son Güncelleme\n";
 
             Object.keys(coffeeData).forEach(id => {
@@ -493,14 +543,13 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", "kahve_tadim_gunlugu_yaz.csv");
+            link.setAttribute("download", "kahve_tadim_gunlugu.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             showToast("CSV dosyanız başarıyla indirildi! 🍹", "success");
         }
 
-        // Modal Yönetimi
         function openSyncModal() {
             document.getElementById('sync-modal').classList.remove('hidden');
         }
@@ -508,30 +557,30 @@
             document.getElementById('sync-modal').classList.add('hidden');
         }
 
-        // Apps Script URL kaydetme
-        function saveApiUrl() {
+        // Web App URL'sini Kaydetme ve Anında Veri Çekme
+        async function saveApiUrl() {
             const url = document.getElementById('api-url-input').value.trim();
             if (url) {
                 localStorage.setItem('google_apps_script_url', url);
-                showToast("Web App URL başarıyla kaydedildi! 🏖️", "success");
+                showToast("Web App URL kaydedildi! Veriler çekiliyor... 🏖️", "success");
+                await fetchDataFromGoogleSheets();
             } else {
                 showToast("Lütfen geçerli bir URL girin.", "error");
             }
         }
 
-        // Google Sheets'e POST Gönderme İşlemi
+        // Manuel Zorunlu Tam Senkronizasyon (Üstüne Yazdır)
         async function syncToGoogleSheets() {
             saveAllToLocalStorage();
             const url = localStorage.getItem('google_apps_script_url');
             
             if (!url) {
-                showToast("Lütfen önce Google Apps Script Web App URL'nizi girip kaydedin!", "error");
+                showToast("Lütfen önce Google Apps Script Web App URL'nizi girin!", "error");
                 return;
             }
 
-            showToast("Veriler Google Sheets'e gönderiliyor... Lütfen bekleyin. 🔄", "info");
+            showToast("Veriler e-tabloya aktarılıyor... 🔄", "info");
 
-            // Gönderilecek veriyi yapılandır
             const payload = Object.keys(coffeeData).map(id => ({
                 name: coffeeData[id].name,
                 characteristic: coffeeData[id].characteristic,
@@ -540,37 +589,23 @@
                 updatedAt: coffeeData[id].updatedAt || new Date().toLocaleString('tr-TR')
             }));
 
-            // Exponential backoff içeren fetch metodu
-            const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-                try {
-                    return await fetch(url, options);
-                } catch (err) {
-                    if (retries <= 1) throw err;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    return fetchWithRetry(url, options, retries - 1, delay * 2);
-                }
-            };
-
             try {
-                const response = await fetchWithRetry(url, {
+                await fetch(url, {
                     method: 'POST',
-                    mode: 'no-cors', // Apps Script için no-cors kullanılması gerekebilir
+                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
                 });
-
-                // Not: no-cors modunda yanıt tipi 'opaque' olur, bu nedenle status okunamayabilir ancak gönderim gerçekleşir.
-                showToast("Google Sheet başarıyla güncellendi! Tablonuzu kontrol edebilirsiniz. 🏄‍♂️🎉", "success");
+                showToast("Tüm veriler Google Sheets'e başarıyla yazdırıldı! 🏄‍♂️🎉", "success");
                 closeSyncModal();
             } catch (err) {
                 console.error(err);
-                showToast("Bir bağlantı hatası oluştu. Lütfen URL'yi ve internetinizi kontrol edin.", "error");
+                showToast("Veri gönderimi başarısız oldu. Lütfen bağlantınızı kontrol edin.", "error");
             }
         }
 
-        // Yardımcı HTML Escape Fonksiyonu
         function escapeHtml(text) {
             if (!text) return "";
             return text
@@ -581,7 +616,6 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // Toast Bildirim Sistemi (alert yerine konforlu arayüz mesajı)
         function showToast(message, type = "success") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -601,12 +635,10 @@
             
             container.appendChild(toast);
 
-            // Animate In
             setTimeout(() => {
                 toast.classList.remove('translate-y-2', 'opacity-0');
             }, 50);
 
-            // Animate Out & Remove
             setTimeout(() => {
                 toast.classList.add('translate-y-2', 'opacity-0');
                 setTimeout(() => {
