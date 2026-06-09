@@ -67,7 +67,7 @@
                 Tropical Coffee Tasting ☀️
             </h1>
             <p class="text-amber-800/80 mt-2 text-base md:text-lg">
-                Yaz sıcaklarında kahve çekirdeklerinin karakteristiklerini keşfedin, tadım notlarınızı çıkarın ve Google Sheet tablonuzla anında senkronize edin!
+                Yaz sıcaklarında kahve çekirdeklerinin karakteristiklerini keşfedin, tadım notlarınızı çıkarın og Google Sheet tablonuzla anında senkronize edin!
             </p>
         </header>
 
@@ -215,6 +215,14 @@ function doPost(e) {
     <div id="toast-container" class="fixed bottom-6 left-6 md:right-auto md:left-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
+        // ==========================================
+        // 🛠️ HARDCODE GOOGLE WEB APP URL BURAYA:
+        // Google Apps Script üzerinde dağıtım (deploy) yaptıktan sonra size verilen 
+        // "https://script.google.com/macros/s/.../exec" formatındaki URL'yi buraya yapıştırın.
+        // Böylece Vercel veya farklı tarayıcılarda açtığınızda otomatik olarak bağlanacaktır!
+        // ==========================================
+        const HARDCODED_API_URL = "https://script.google.com/macros/s/AKfycbxySKr26RIR8E21RsVMcs_Ecotld-4EI8IjP-lfZ37__Qupk-1c3zzYI5-sMIQ0aUU4/exec"; 
+
         // Kahve Listesi
         const initialCoffeeList = [
             { id: "BCG001", name: "Guatemala Arabica Açık Kavrum (Light Roast)", price: "188,12 TL" },
@@ -239,8 +247,13 @@ function doPost(e) {
             loadSavedData();
             renderCoffeeCards();
             
-            // Web App URL'sini yerelden çek
-            const savedUrl = localStorage.getItem('google_apps_script_url');
+            // Web App URL'sini öncelikle yerelden çek, yoksa kodun içindeki hardcoded URL'yi kullan
+            let savedUrl = localStorage.getItem('google_apps_script_url');
+            if (!savedUrl && HARDCODED_API_URL.trim() !== "") {
+                savedUrl = HARDCODED_API_URL.trim();
+                localStorage.setItem('google_apps_script_url', savedUrl);
+            }
+
             if (savedUrl) {
                 document.getElementById('api-url-input').value = savedUrl;
                 // URL varsa verileri Google Sheets'ten otomatik olarak çek
@@ -524,7 +537,7 @@ function doPost(e) {
             saveAllToLocalStorage();
             
             let csvContent = "\uFEFF"; 
-            csvContent += "Kahve Kodu,Kahve Adı,Karakteristik Özellikler,Tadım Deneyimi,Puan (1-10),Son Güncelleme\n";
+            csvContent += "Kahve Kodu,Kahve Adı,Karakteristik Özellikler,Tadım Demeyimi,Puan (1-10),Son Güncelleme\n";
 
             Object.keys(coffeeData).forEach(id => {
                 const item = coffeeData[id];
