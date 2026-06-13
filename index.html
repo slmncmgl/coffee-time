@@ -56,10 +56,19 @@
     </div>
 
     <!-- Ana Konteyner -->
-    <div class="container mx-auto px-4 pt-12 relative z-10">
+    <div class="container mx-auto px-4 pt-12 relative z-10 max-w-5xl">
         
         <!-- Başlık Kartı -->
-        <header class="text-center mb-12 bg-white/70 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl border border-orange-200/50 max-w-4xl mx-auto transform hover:rotate-1 transition-transform">
+        <header class="text-center mb-12 bg-white/70 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl border border-orange-200/50 transform hover:rotate-1 transition-transform relative">
+            
+            <!-- Dinamik Bağlantı Durumu Rozeti -->
+            <div class="absolute top-4 right-4 flex items-center gap-2">
+                <span id="sync-status-badge" class="px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-gray-200 text-gray-700 flex items-center gap-1.5 transition-all duration-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-gray-400 animate-pulse"></span>
+                    Kontrol Ediliyor...
+                </span>
+            </div>
+
             <div class="inline-block bg-orange-400 text-white px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-3 shadow-md">
                 🌴 Kahve & Yaz Esintisi 🌊
             </div>
@@ -67,14 +76,14 @@
                 Tropical Coffee Tasting ☀️
             </h1>
             <p class="text-amber-800/80 mt-2 text-base md:text-lg">
-                Yaz sıcaklarında kahve çekirdeklerinin karakteristiklerini keşfedin, tadım notlarınızı çıkarın og Google Sheet tablonuzla anında senkronize edin!
+                Yaz sıcaklarında kahve çekirdeklerinin karakteristiklerini keşfedin, tadım notlarınızı çıkarın ve Google Sheet tablonuzla anında senkronize edin!
             </p>
         </header>
 
-        <!-- Kahve Listesi -->
-        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div id="coffee-cards-container" class="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Dinamik Kartlar -->
+        <!-- Kahve Listesi (Ferah İkili Düzen) -->
+        <main class="w-full">
+            <div id="coffee-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Dinamik Kartlar buraya gelecek -->
             </div>
         </main>
     </div>
@@ -217,27 +226,26 @@ function doPost(e) {
     <script>
         // ==========================================
         // 🛠️ HARDCODE GOOGLE WEB APP URL BURAYA:
-        // Google Apps Script üzerinde dağıtım (deploy) yaptıktan sonra size verilen 
-        // "https://script.google.com/macros/s/.../exec" formatındaki URL'yi buraya yapıştırın.
-        // Böylece Vercel veya farklı tarayıcılarda açtığınızda otomatik olarak bağlanacaktır!
         // ==========================================
         const HARDCODED_API_URL = "https://script.google.com/macros/s/AKfycbxySKr26RIR8E21RsVMcs_Ecotld-4EI8IjP-lfZ37__Qupk-1c3zzYI5-sMIQ0aUU4/exec"; 
 
-        // Kahve Listesi
+        // Sandbox / Önizleme ortamı kontrolü (CORS engellerini yakalamak için global tanımlandı)
+        const isSandbox = window.location.protocol === "blob:" || window.location.hostname.includes("usercontent.goog") || window.location.hostname === "";
+
+        // Kahve Listesi (BCMV001 ve fiyatlar temizlendi)
         const initialCoffeeList = [
-            { id: "BCG001", name: "Guatemala Arabica Açık Kavrum (Light Roast)", price: "188,12 TL" },
-            { id: "BCNC001", name: "Nicaragua SHB EP AAA Arabica", price: "198,02 TL" },
-            { id: "BCY01", name: "Etiyopya Yirgacheffe Gr2 Açık Kavrum (Light Roast)", price: "168,32 TL" },
-            { id: "PWSCR01", name: "Panama Santa Clara Arabica", price: "198,02 TL" },
-            { id: "BCYN01", name: "Yirgacheffe Gr1 Natural Açık Kavrum (Light Roast)", price: "198,02 TL" },
-            { id: "BCHM01", name: "Honduras Marcala Organik Kahve", price: "198,02 TL" },
-            { id: "BRBS01", name: "Yellow Bourbon Natural Speciality Arabica Kahve", price: "188,12 TL" },
-            { id: "ISME01", name: "Sumatra Gayo Gr1 Standart Kavrum (Standard Roast)", price: "198,02 TL" },
-            { id: "BCCRT01", name: "Costa Rica Tarrazu", price: "222,77 TL" },
-            { id: "BCT001", name: "Tanzania Arabica AA Washed", price: "178,22 TL" },
-            { id: "BCMV001", name: "Mexico SHG Ep Arabica", price: "178,22 TL" },
-            { id: "BCRSC001", name: "Rwanda/Ruanda Semiwashed", price: "178,22 TL" },
-            { id: "araracap2025", name: "Capadocia Arara Brezilya Speciality Arabica Kahve", price: "Fiyat Belirtilmemiş" }
+            { id: "BCG001", name: "Guatemala Arabica Açık Kavrum (Light Roast)" },
+            { id: "BCNC001", name: "Nicaragua SHB EP AAA Arabica" },
+            { id: "BCY01", name: "Etiyopya Yirgacheffe Gr2 Açık Kavrum (Light Roast)" },
+            { id: "PWSCR01", name: "Panama Santa Clara Arabica" },
+            { id: "BCYN01", name: "Yirgacheffe Gr1 Natural Açık Kavrum (Light Roast)" },
+            { id: "BCHM01", name: "Honduras Marcala Organik Kahve" },
+            { id: "BRBS01", name: "Yellow Bourbon Natural Speciality Arabica Kahve" },
+            { id: "ISME01", name: "Sumatra Gayo Gr1 Standart Kavrum (Standard Roast)" },
+            { id: "BCCRT01", name: "Costa Rica Tarrazu" },
+            { id: "BCT001", name: "Tanzania Arabica AA Washed" },
+            { id: "BCRSC001", name: "Rwanda/Ruanda Semiwashed" },
+            { id: "araracap2025", name: "Capadocia Arara Brezilya Speciality Arabica Kahve" }
         ];
 
         let coffeeData = {};
@@ -254,25 +262,76 @@ function doPost(e) {
                 localStorage.setItem('google_apps_script_url', savedUrl);
             }
 
-            if (savedUrl) {
+            if (savedUrl && isValidUrl(savedUrl)) {
                 document.getElementById('api-url-input').value = savedUrl;
-                // URL varsa verileri Google Sheets'ten otomatik olarak çek
+                updateSyncStatusBadge("connecting");
                 await fetchDataFromGoogleSheets();
             } else {
+                updateSyncStatusBadge("offline");
                 showToast("E-Tablo bağlantısı henüz kurulmadı. Verileriniz yerel hafızada saklanıyor. 🏖️", "info");
             }
         };
+
+        // URL format kontrolü
+        function isValidUrl(string) {
+            try {
+                const url = new URL(string);
+                return url.protocol === "http:" || url.protocol === "https:";
+            } catch (_) {
+                return false;  
+            }
+        }
+
+        // Görsel Bağlantı Rozetini Güncelleme
+        function updateSyncStatusBadge(status) {
+            const badge = document.getElementById('sync-status-badge');
+            if (!badge) return;
+
+            if (status === "offline") {
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-orange-100 text-orange-700 flex items-center gap-1.5 transition-all duration-300";
+                badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Çevrimdışı (Yerel Hafıza)`;
+            } else if (status === "connecting") {
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-amber-100 text-amber-700 flex items-center gap-1.5 transition-all duration-300";
+                badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span> E-Tabloya Bağlanıyor...`;
+            } else if (status === "success") {
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-emerald-100 text-emerald-700 flex items-center gap-1.5 transition-all duration-300";
+                badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Google Sheets Aktif`;
+            } else if (status === "sandbox-preview") {
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-sky-100 text-sky-700 flex items-center gap-1.5 transition-all duration-300 cursor-pointer";
+                badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse"></span> Önizleme Modu (Yerel)`;
+                badge.onclick = () => showToast("Canvas önizlemesinde tarayıcı güvenlik (CORS) kısıtlamaları nedeniyle doğrudan veri okunamıyor. Vercel sitenizde sorunsuz çalışacaktır! 🌴", "info");
+            } else if (status === "error") {
+                if (isSandbox) {
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-sky-100 text-sky-700 flex items-center gap-1.5 transition-all duration-300 cursor-pointer";
+                    badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Önizleme Modu (Yerel)`;
+                    badge.onclick = () => showToast("Canvas önizlemesinde tarayıcı güvenlik (CORS) kısıtlamaları nedeniyle doğrudan veri okunamıyor. Vercel sitenizde sorunsuz çalışacaktır! 🌴", "info");
+                } else {
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-rose-100 text-rose-700 flex items-center gap-1.5 transition-all duration-300 cursor-pointer";
+                    badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Bağlantı Hatası ⚠️`;
+                    badge.onclick = () => openSyncModal();
+                }
+            }
+        }
 
         // Veriyi LocalStorage'dan çek veya ilk kez oluştur
         function loadSavedData() {
             const stored = localStorage.getItem('coffee_tasting_notes');
             if (stored) {
                 coffeeData = JSON.parse(stored);
+                // Eski yerel hafızadan BCMV001'i ve fiyat değerlerini temizle
+                if (coffeeData["BCMV001"]) {
+                    delete coffeeData["BCMV001"];
+                }
+                Object.keys(coffeeData).forEach(id => {
+                    if (coffeeData[id].price) {
+                        delete coffeeData[id].price;
+                    }
+                });
+                saveToLocalStorageDirectly();
             } else {
                 initialCoffeeList.forEach(coffee => {
                     coffeeData[coffee.id] = {
                         name: coffee.name,
-                        price: coffee.price,
                         characteristic: "",
                         tasting: "",
                         rating: 0,
@@ -290,22 +349,38 @@ function doPost(e) {
         // Google Sheets'ten Veri Çekme (GET) Fonksiyonu
         async function fetchDataFromGoogleSheets() {
             const url = localStorage.getItem('google_apps_script_url');
-            if (!url) return;
 
-            showToast("Google Sheets'teki mevcut verileriniz indiriliyor... 🔄", "info");
+            if (!url || !isValidUrl(url)) {
+                updateSyncStatusBadge("offline");
+                return;
+            }
+
+            if (isSandbox) {
+                showToast("Canvas Önizlemesi: Yerel verileriniz yükleniyor... (Vercel'de Google Sheets otomatik eşitlenir) 🏖️", "info");
+            } else {
+                showToast("Google Sheets'teki mevcut verileriniz indiriliyor... 🔄", "info");
+            }
 
             try {
                 const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error("HTTP Hata Kodu: " + response.status);
+                }
+
+                const contentType = response.headers.get("content-type");
+                if (contentType && !contentType.includes("application/json")) {
+                    throw new Error("Google Apps Script JSON yerine HTML döndürdü. Muhtemelen izin aşaması eksik!");
+                }
+
                 const result = await response.json();
 
                 if (result.status === "success" && result.data && result.data.length > 0) {
-                    // Gelen verileri mevcut listeyle eşleştirip güncelle
                     result.data.forEach(sheetItem => {
                         const matchingCoffee = initialCoffeeList.find(c => c.name === sheetItem.name);
                         if (matchingCoffee) {
                             coffeeData[matchingCoffee.id] = {
                                 name: sheetItem.name,
-                                price: matchingCoffee.price,
                                 characteristic: sheetItem.characteristic || "",
                                 tasting: sheetItem.tasting || "",
                                 rating: sheetItem.rating || 0,
@@ -315,13 +390,37 @@ function doPost(e) {
                     });
                     saveToLocalStorageDirectly();
                     renderCoffeeCards();
+                    if (isSandbox) {
+                        updateSyncStatusBadge("sandbox-preview");
+                    } else {
+                        updateSyncStatusBadge("success");
+                    }
                     showToast("Google Sheets verileri başarıyla geri yüklendi! 🏄‍♂️🎉", "success");
                 } else if (result.status === "success") {
-                    showToast("Google Sheet tablonuz henüz boş. Giriş yaptıkça dolacaktır! 🐚", "info");
+                    if (isSandbox) {
+                        updateSyncStatusBadge("sandbox-preview");
+                    } else {
+                        updateSyncStatusBadge("success");
+                    }
+                    showToast("Google Sheet tablonuz bağlandı ve hazır! 🐚", "info");
+                } else {
+                    throw new Error(result.message || "Bilinmeyen API hatası.");
                 }
             } catch (err) {
-                console.error("Veri çekme hatası:", err);
-                showToast("Google Sheets verileri okunamadı. Çevrimdışı/Yerel kayıtlar yükleniyor.", "info");
+                // Önizleme sandbox ortamlarındaysa hatayı konsola basıp çökme alarmı vermesini engelliyoruz
+                if (isSandbox) {
+                    console.warn("Önizleme ortamında Google Sheets veri okuma kısıtlaması (CORS):", err.message);
+                    updateSyncStatusBadge("sandbox-preview");
+                    showToast("Güvenlik Sınırı: Canvas önizlemesinde doğrudan Google Sheets okunamaz. Vercel sitenizde otomatik senkronize olacaktır! 🌴", "info");
+                } else {
+                    console.error("Veri okuma detayı:", err);
+                    updateSyncStatusBadge("error");
+                    if (err.message && err.message.includes("JSON")) {
+                        showToast("Bağlantı Hatası: Google Script izinleri yetkilendirilmemiş olabilir.", "error");
+                    } else {
+                        showToast("E-Tablo verileri okunamadı. Google Dağıtımında erişimi 'Herkes' (Anyone) yaptığınızdan emin olun!", "error");
+                    }
+                }
             }
         }
 
@@ -348,7 +447,7 @@ function doPost(e) {
             }
         }
 
-        // Kartları Arayüze Ekleme
+        // Kartları Arayüze Ekleme (Kod kutucuğu ve "Kod:" ifadesi tamamen silindi)
         function renderCoffeeCards() {
             const container = document.getElementById('coffee-cards-container');
             container.innerHTML = "";
@@ -374,16 +473,8 @@ function doPost(e) {
                         </div>
 
                         <div>
-                            <div class="flex justify-between items-start gap-2 mb-3">
-                                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-lg">
-                                    Code: ${coffee.id}
-                                </span>
-                                <span class="text-orange-600 font-bold text-sm">
-                                    ${coffee.price}
-                                </span>
-                            </div>
-
-                            <h4 class="text-lg font-bold text-amber-950 mb-4 tracking-tight min-h-[56px] flex items-center">
+                            <!-- Üst Başlık (Kod kutucukları tamamen kaldırıldı) -->
+                            <h4 class="text-lg font-bold text-amber-950 mb-4 tracking-tight min-h-[56px] flex items-center mt-2">
                                 ${coffee.name}
                             </h4>
 
@@ -451,14 +542,12 @@ function doPost(e) {
             }
         }
 
-        // Değer Değişikliği (Anlık state'e yazma)
         function updateValue(id, key, value) {
             coffeeData[id][key] = value;
             coffeeData[id].updatedAt = new Date().toLocaleString('tr-TR');
             saveToLocalStorageDirectly();
         }
 
-        // Puan Verme ve Otomatik Kaydetme
         function setRating(id, rating) {
             playSummerChime(rating);
             coffeeData[id].rating = rating;
@@ -470,7 +559,6 @@ function doPost(e) {
             autoSyncToSheets();
         }
 
-        // Karttaki Kaydet Butonu ve Otomatik Kaydetme
         async function saveSingleCard(id) {
             const charVal = document.getElementById(`char-${id}`).value;
             const tastingVal = document.getElementById(`tasting-${id}`).value;
@@ -486,10 +574,10 @@ function doPost(e) {
             await autoSyncToSheets();
         }
 
-        // Arka Planda Sessizce Gönderme (Kullanıcıyı duraklatmaz)
         async function autoSyncToSheets() {
             const url = localStorage.getItem('google_apps_script_url');
-            if (!url) {
+
+            if (!url || !isValidUrl(url)) {
                 showToast("Notlar yerelde saklandı. Veritabanı senkronizasyonu için sağ alttaki çarktan URL'nizi girin! 🏖️", "info");
                 return;
             }
@@ -511,9 +599,21 @@ function doPost(e) {
                     },
                     body: JSON.stringify(payload)
                 });
-                showToast("E-Tablo arka planda başarıyla güncellendi! 🏄‍♂️🎉", "success");
+                
+                if (isSandbox) {
+                    updateSyncStatusBadge("sandbox-preview");
+                } else {
+                    updateSyncStatusBadge("success");
+                }
+                showToast("Yerel veriler kaydedildi ve Google Sheets'e gönderildi! 🏄‍♂️🎉", "success");
             } catch (err) {
-                console.error(err);
+                if (isSandbox) {
+                    console.warn("Önizleme ortamında otomatik senkronizasyon kısıtlaması (CORS):", err.message);
+                    updateSyncStatusBadge("sandbox-preview");
+                } else {
+                    console.error("Otomatik senkronizasyon hatası:", err);
+                    updateSyncStatusBadge("error");
+                }
                 showToast("Senkronizasyon sırasında ufak bir bağlantı hatası oluştu.", "error");
             }
         }
@@ -532,12 +632,11 @@ function doPost(e) {
             showToast("Tüm notlar tarayıcı hafızasına güvenle kaydedildi! 🐚", "success");
         }
 
-        // CSV İndirme
         function exportToCSV() {
             saveAllToLocalStorage();
             
             let csvContent = "\uFEFF"; 
-            csvContent += "Kahve Kodu,Kahve Adı,Karakteristik Özellikler,Tadım Demeyimi,Puan (1-10),Son Güncelleme\n";
+            csvContent += "Kahve Kodu,Kahve Adı,Karakteristik Özellikler,Tadım Deneyimi,Puan (1-10),Son Güncelleme\n";
 
             Object.keys(coffeeData).forEach(id => {
                 const item = coffeeData[id];
@@ -570,11 +669,11 @@ function doPost(e) {
             document.getElementById('sync-modal').classList.add('hidden');
         }
 
-        // Web App URL'sini Kaydetme ve Anında Veri Çekme
         async function saveApiUrl() {
             const url = document.getElementById('api-url-input').value.trim();
-            if (url) {
+            if (url && isValidUrl(url)) {
                 localStorage.setItem('google_apps_script_url', url);
+                updateSyncStatusBadge("connecting");
                 showToast("Web App URL kaydedildi! Veriler çekiliyor... 🏖️", "success");
                 await fetchDataFromGoogleSheets();
             } else {
@@ -582,12 +681,11 @@ function doPost(e) {
             }
         }
 
-        // Manuel Zorunlu Tam Senkronizasyon (Üstüne Yazdır)
         async function syncToGoogleSheets() {
             saveAllToLocalStorage();
             const url = localStorage.getItem('google_apps_script_url');
             
-            if (!url) {
+            if (!url || !isValidUrl(url)) {
                 showToast("Lütfen önce Google Apps Script Web App URL'nizi girin!", "error");
                 return;
             }
@@ -611,10 +709,16 @@ function doPost(e) {
                     },
                     body: JSON.stringify(payload)
                 });
+                updateSyncStatusBadge("success");
                 showToast("Tüm veriler Google Sheets'e başarıyla yazdırıldı! 🏄‍♂️🎉", "success");
                 closeSyncModal();
             } catch (err) {
-                console.error(err);
+                if (isSandbox) {
+                    console.warn("Önizleme ortamında manuel senkronizasyon kısıtlaması (CORS):", err.message);
+                } else {
+                    console.error("Manuel senkronizasyon hatası:", err);
+                }
+                updateSyncStatusBadge("error");
                 showToast("Veri gönderimi başarısız oldu. Lütfen bağlantınızı kontrol edin.", "error");
             }
         }
